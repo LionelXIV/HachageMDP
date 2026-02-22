@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "p+YK9DI+juQ=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\pc\\Downloads\\TP1 SECURITE INFORMATIQUE\\src\\HashProbe\\HashProbe.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\pc\\.nuget\\packages\\bcrypt.net-next\\4.0.3\\bcrypt.net-next.4.0.3.nupkg.sha512"
+  ],
+  "logs": []
+}
