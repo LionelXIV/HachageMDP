@@ -48,3 +48,11 @@ project.nuget.cache
 ## OS
 Thumbs.db
 .DS_Store
+
+# fichiers de test locaux
+test_small.txt
+test_dict.txt
+mini_dict.txt
+
+# dictionnaire local (optionnel)
+Dico_fr.txt
