@@ -73,7 +73,33 @@ namespace PwdForge
             if (DemanderParametres(out int minLength, out int maxLength, out string allowedChars, out string outputFile))
             {
                 AfficherResume(minLength, maxLength, allowedChars, outputFile);
-                Console.WriteLine("\n[Fonctionnalité de génération à implémenter]");
+                
+                // Calculer le nombre de combinaisons avant de générer
+                var totalCombinations = DictionaryGenerator.EstimateCount(minLength, maxLength, allowedChars.Length);
+                Console.WriteLine($"\nNombre de combinaisons à générer : {totalCombinations:N0}");
+                
+                // Demander confirmation si le nombre est très grand
+                if (totalCombinations > 1_000_000)
+                {
+                    Console.Write("\nAttention : Ceci va générer un très grand nombre de combinaisons.");
+                    Console.Write(" Continuer ? (o/n) : ");
+                    string confirmation = Console.ReadLine() ?? "";
+                    if (confirmation.ToLower() != "o" && confirmation.ToLower() != "oui")
+                    {
+                        Console.WriteLine("Génération annulée.");
+                        return;
+                    }
+                }
+                
+                try
+                {
+                    // Générer le dictionnaire
+                    DictionaryGenerator.GenerateToFile(minLength, maxLength, allowedChars, outputFile);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"\n✗ Erreur lors de la génération : {ex.Message}");
+                }
             }
         }
 
@@ -87,7 +113,39 @@ namespace PwdForge
             if (DemanderParametres(out int minLength, out int maxLength, out string allowedChars, out string outputFile))
             {
                 AfficherResume(minLength, maxLength, allowedChars, outputFile);
-                Console.WriteLine("\n[Fonctionnalité d'estimation à implémenter]");
+                
+                // Calculer le nombre de combinaisons
+                var totalCombinations = DictionaryGenerator.EstimateCount(minLength, maxLength, allowedChars.Length);
+                
+                Console.WriteLine("\n--- Résultat de l'estimation ---");
+                Console.WriteLine($"Nombre total de combinaisons : {totalCombinations:N0}");
+                
+                // Estimation de la taille approximative du fichier
+                // Approximation : chaque ligne = longueur moyenne + retour à la ligne (2 octets)
+                // Longueur moyenne = (minLength + maxLength) / 2
+                double avgLength = (minLength + maxLength) / 2.0;
+                double avgBytesPerLine = avgLength + 2; // +2 pour \r\n
+                double estimatedSizeBytes = (double)totalCombinations * avgBytesPerLine;
+                
+                Console.WriteLine($"\nEstimation de la taille du fichier :");
+                if (estimatedSizeBytes < 1024)
+                {
+                    Console.WriteLine($"  - {estimatedSizeBytes:F0} octets");
+                }
+                else if (estimatedSizeBytes < 1024 * 1024)
+                {
+                    Console.WriteLine($"  - {estimatedSizeBytes / 1024.0:F2} KB");
+                }
+                else if (estimatedSizeBytes < 1024 * 1024 * 1024)
+                {
+                    Console.WriteLine($"  - {estimatedSizeBytes / (1024.0 * 1024.0):F2} MB");
+                }
+                else
+                {
+                    Console.WriteLine($"  - {estimatedSizeBytes / (1024.0 * 1024.0 * 1024.0):F2} GB");
+                }
+                
+                Console.WriteLine($"  - (Estimation basée sur {avgLength:F1} caractères par ligne en moyenne)");
             }
         }
 

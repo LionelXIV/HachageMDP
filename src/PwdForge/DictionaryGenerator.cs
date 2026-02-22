@@ -1,3 +1,6 @@
+using System.Numerics;
+using System.Text;
+
 namespace PwdForge
 {
     /// <summary>
@@ -10,9 +13,8 @@ namespace PwdForge
         private int _maxLength;
         private string _allowedChars;
         private string _outputPath;
-        private long _totalCombinations;
-        private long _currentCount;
-        private DateTime _startTime;
+        private BigInteger _totalCombinations;
+        private BigInteger _currentCount;
 
         /// <summary>
         /// Initialise le générateur avec les paramètres fournis
@@ -24,24 +26,31 @@ namespace PwdForge
             _allowedChars = allowedChars;
             _outputPath = outputPath;
             _currentCount = 0;
-            _totalCombinations = CalculateTotalCombinations();
+            _totalCombinations = EstimateCount(minLength, maxLength, allowedChars.Length);
         }
 
         /// <summary>
         /// Calcule le nombre total de combinaisons possibles
-        /// Formule : Σ(n^k) pour k de minLength à maxLength
-        /// où n = nombre de caractères permis
+        /// Formule : Σ(charsetLength^k) pour k de minLen à maxLen
+        /// Utilise BigInteger pour gérer les très grands nombres
         /// </summary>
-        private long CalculateTotalCombinations()
+        /// <param name="minLen">Longueur minimale</param>
+        /// <param name="maxLen">Longueur maximale</param>
+        /// <param name="charsetLength">Nombre de caractères dans le charset</param>
+        /// <returns>Nombre total de combinaisons (BigInteger)</returns>
+        public static BigInteger EstimateCount(int minLen, int maxLen, int charsetLength)
         {
-            // TODO ÉTAPE 2.3 : Implémenter le calcul
-            // Exemple : min=1, max=3, chars="abc" → 3 + 9 + 27 = 39
-            long total = 0;
-            int n = _allowedChars.Length;
+            BigInteger total = BigInteger.Zero;
             
-            for (int k = _minLength; k <= _maxLength; k++)
+            for (int k = minLen; k <= maxLen; k++)
             {
-                // TODO : Calculer n^k et l'ajouter à total
+                // Calcul de charsetLength^k
+                BigInteger power = BigInteger.One;
+                for (int i = 0; i < k; i++)
+                {
+                    power *= charsetLength;
+                }
+                total += power;
             }
             
             return total;
@@ -49,60 +58,179 @@ namespace PwdForge
 
         /// <summary>
         /// Génère le dictionnaire et l'écrit dans le fichier de sortie
-        /// Utilise le streaming pour éviter de charger tout en mémoire
+        /// Utilise une génération itérative pour éviter les problèmes de récursion profonde
         /// </summary>
-        public void Generate()
+        /// <param name="minLen">Longueur minimale</param>
+        /// <param name="maxLen">Longueur maximale</param>
+        /// <param name="charset">Caractères autorisés</param>
+        /// <param name="outputPath">Chemin du fichier de sortie</param>
+        /// <param name="progressEvery">Afficher la progression toutes les X lignes</param>
+        public static void GenerateToFile(int minLen, int maxLen, string charset, string outputPath, int progressEvery = 10000)
         {
-            _startTime = DateTime.Now;
-            _currentCount = 0;
+            // Validation des paramètres
+            if (string.IsNullOrEmpty(charset))
+            {
+                throw new ArgumentException("Le charset ne peut pas être vide.", nameof(charset));
+            }
 
-            // TODO ÉTAPE 2.4 : Ouvrir un StreamWriter vers le fichier de sortie
-            // Utiliser UTF-8 encoding
-            // using (var writer = new StreamWriter(_outputPath, false, Encoding.UTF8))
+            if (minLen < 1 || maxLen < minLen)
+            {
+                throw new ArgumentException("Longueurs invalides.", nameof(minLen));
+            }
 
-            // TODO ÉTAPE 2.4 : Appeler GenerateRecursive() pour chaque longueur
-            // for (int length = _minLength; length <= _maxLength; length++)
-            // {
-            //     GenerateRecursive(writer, "", length);
-            // }
+            // Validation du chemin de sortie
+            try
+            {
+                string directory = Path.GetDirectoryName(outputPath) ?? "";
+                if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+                {
+                    Directory.CreateDirectory(directory);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new IOException($"Impossible de créer le répertoire de sortie : {ex.Message}", ex);
+            }
 
-            // TODO ÉTAPE 2.4 : Afficher le résumé final
+            DateTime startTime = DateTime.Now;
+            BigInteger currentCount = BigInteger.Zero;
+            BigInteger totalCombinations = EstimateCount(minLen, maxLen, charset.Length);
+
+            Console.WriteLine($"\nGénération en cours...");
+            Console.WriteLine($"Total de combinaisons à générer : {totalCombinations:N0}");
+
+            try
+            {
+                using (var writer = new StreamWriter(outputPath, false, Encoding.UTF8))
+                {
+                    // Générer pour chaque longueur de minLen à maxLen
+                    for (int length = minLen; length <= maxLen; length++)
+                    {
+                        GenerateForLength(writer, charset, length, ref currentCount, totalCombinations, startTime, progressEvery);
+                    }
+                }
+
+                TimeSpan elapsed = DateTime.Now - startTime;
+                Console.WriteLine($"\n✓ Génération terminée !");
+                Console.WriteLine($"  - Mots générés : {currentCount:N0}");
+                Console.WriteLine($"  - Fichier : {outputPath}");
+                Console.WriteLine($"  - Temps écoulé : {elapsed.TotalSeconds:F2} secondes");
+                
+                // Estimation de la taille du fichier (approximative)
+                if (File.Exists(outputPath))
+                {
+                    long fileSize = new FileInfo(outputPath).Length;
+                    Console.WriteLine($"  - Taille du fichier : {fileSize:N0} octets ({fileSize / 1024.0:F2} KB)");
+                }
+            }
+            catch (UnauthorizedAccessException)
+            {
+                throw new IOException($"Accès refusé au fichier : {outputPath}");
+            }
+            catch (DirectoryNotFoundException)
+            {
+                throw new IOException($"Répertoire introuvable : {Path.GetDirectoryName(outputPath)}");
+            }
+            catch (IOException ex)
+            {
+                throw new IOException($"Erreur d'écriture dans le fichier : {ex.Message}", ex);
+            }
         }
 
         /// <summary>
-        /// Génère récursivement toutes les combinaisons de longueur donnée
+        /// Génère toutes les combinaisons d'une longueur donnée de manière itérative
+        /// Utilise un tableau d'indices pour éviter la récursion profonde
         /// </summary>
-        /// <param name="writer">StreamWriter pour écrire dans le fichier</param>
-        /// <param name="current">Combinaison actuelle en construction</param>
-        /// <param name="remainingLength">Nombre de caractères restants à ajouter</param>
-        private void GenerateRecursive(StreamWriter writer, string current, int remainingLength)
+        private static void GenerateForLength(StreamWriter writer, string charset, int length, 
+            ref BigInteger currentCount, BigInteger totalCombinations, DateTime startTime, int progressEvery)
         {
-            // TODO ÉTAPE 2.4 : Implémenter la récursion
-            // Si remainingLength == 0 :
-            //   - Écrire current dans le fichier (une ligne)
-            //   - Incrémenter _currentCount
-            //   - Afficher la progression toutes les X tentatives (ex: 10000)
-            // Sinon :
-            //   - Pour chaque caractère dans _allowedChars :
-            //     - Appeler récursivement avec current + char, remainingLength - 1
+            int charsetLength = charset.Length;
+            
+            // Tableau d'indices pour représenter la position actuelle dans chaque position
+            int[] indices = new int[length];
+            
+            // Initialiser tous les indices à 0
+            for (int i = 0; i < length; i++)
+            {
+                indices[i] = 0;
+            }
+
+            bool finished = false;
+            
+            while (!finished)
+            {
+                // Construire le mot de passe à partir des indices actuels
+                StringBuilder word = new StringBuilder(length);
+                for (int i = 0; i < length; i++)
+                {
+                    word.Append(charset[indices[i]]);
+                }
+                
+                // Écrire le mot dans le fichier
+                writer.WriteLine(word.ToString());
+                currentCount++;
+                
+                // Afficher la progression si nécessaire
+                if (currentCount % progressEvery == 0 || currentCount == totalCombinations)
+                {
+                    DisplayProgress(currentCount, totalCombinations, startTime);
+                }
+                
+                // Passer à la combinaison suivante
+                // Incrémenter les indices de droite à gauche (comme un compteur)
+                int position = length - 1;
+                while (position >= 0)
+                {
+                    indices[position]++;
+                    if (indices[position] < charsetLength)
+                    {
+                        // Pas de débordement, on continue
+                        break;
+                    }
+                    else
+                    {
+                        // Débordement : remettre à 0 et passer à la position précédente
+                        indices[position] = 0;
+                        position--;
+                    }
+                }
+                
+                // Si on a débordé toutes les positions, on a terminé
+                if (position < 0)
+                {
+                    finished = true;
+                }
+            }
         }
 
         /// <summary>
         /// Affiche la progression de la génération
         /// </summary>
-        private void DisplayProgress()
+        private static void DisplayProgress(BigInteger currentCount, BigInteger totalCombinations, DateTime startTime)
         {
-            // TODO ÉTAPE 2.4 : Afficher la progression
-            // - Pourcentage complété
-            // - Nombre de mots générés / total
-            // - Temps écoulé
-            // - Vitesse (mots/seconde)
-            // Utiliser Console.SetCursorPosition pour mettre à jour la même ligne
+            TimeSpan elapsed = DateTime.Now - startTime;
+            double percentage = 0;
+            
+            if (totalCombinations > 0)
+            {
+                // Calcul du pourcentage (approximatif pour BigInteger)
+                percentage = (double)(currentCount * 100) / (double)totalCombinations;
+            }
+            
+            double speed = 0;
+            if (elapsed.TotalSeconds > 0)
+            {
+                speed = (double)currentCount / elapsed.TotalSeconds;
+            }
+            
+            Console.Write($"\rProgression : {currentCount:N0} / {totalCombinations:N0} ({percentage:F2}%) | " +
+                         $"Temps : {elapsed.TotalSeconds:F1}s | " +
+                         $"Vitesse : {speed:N0} mots/s");
         }
 
         /// <summary>
         /// Retourne le nombre total de combinaisons calculées
         /// </summary>
-        public long TotalCombinations => _totalCombinations;
+        public BigInteger TotalCombinations => _totalCombinations;
     }
 }

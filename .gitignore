@@ -1,0 +1,50 @@
+## Build results
+bin/
+obj/
+
+## Visual Studio temporary files
+*.user
+*.suo
+*.useros
+*.sln.docstates
+
+## PDF files (academic documents)
+*.pdf
+
+## Visual Studio cache
+.vs/
+.vscode/
+
+## NuGet
+packages.lock.json
+*.nuget.props
+*.nuget.targets
+project.lock.json
+
+## .NET
+*.dll
+*.exe
+*.pdb
+*.cache
+*.deps.json
+*.runtimeconfig.json
+*.AssemblyAttributes.cs
+*.AssemblyInfo.cs
+*.AssemblyInfoInputs.cache
+*.GeneratedMSBuildEditorConfig.editorconfig
+*.GlobalUsings.g.cs
+*.assets.cache
+*.csproj.AssemblyReference.cache
+*.csproj.CoreCompileInputs.cache
+*.csproj.FileListAbsolute.txt
+*.csproj.Up2Date
+*.genruntimeconfig.cache
+*.csproj.nuget.dgspec.json
+*.csproj.nuget.g.props
+*.csproj.nuget.g.targets
+project.assets.json
+project.nuget.cache
+
+## OS
+Thumbs.db
+.DS_Store
