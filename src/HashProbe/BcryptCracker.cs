@@ -175,8 +175,8 @@ namespace HashProbe
                     return;
                 }
 
-                // Afficher la progression toutes les 2500 tentatives
-                if (_attempts % 2500 == 0)
+                // Afficher la progression toutes les 250 tentatives
+                if (_attempts % 250 == 0)
                 {
                     DisplayProgress(password);
                 }

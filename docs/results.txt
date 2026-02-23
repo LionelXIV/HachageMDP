@@ -1,0 +1,72 @@
+RÉSULTATS DU CASSAGE DE HACHAGES BCRYPT
+Date : 2026-02-22
+
+Hash #1
+Mot trouvé: GaMMa2
+Sel: yFJlKHNYvr2p9lc.CV78..
+Tentatives: 16,314
+Temps: 14:56
+Dictionnaire utilisé: data\dict_1.txt
+
+Hash #2
+Mot trouvé: mars22
+Sel: Hh0UhfhtZjrRHdEOxDe3Ie
+Tentatives: 23,652
+Temps: 50:40
+Dictionnaire utilisé: data\dict_2.txt
+
+Hash #3
+Mot trouvé: baBa99
+Sel: yZLhRuimD8WcsBWyvgI5Ku
+Tentatives: 8,460
+Temps: 48:46
+Dictionnaire utilisé: data\dict_3.txt
+
+Hash #4
+Mot trouvé: baccab
+Sel: WNSPHl/HRs9PBuB6MPP2Ue
+Tentatives: 317
+Temps: 01:03
+Dictionnaire utilisé: data\dict_4.txt
+
+Hash #5
+Mot trouvé: ZZZYYY
+Sel: FfNcnJ5bqVU7soHsTjH27e
+Tentatives: 716
+Temps: 17:52
+Dictionnaire utilisé: data\dict_5.txt
+
+Hash #6
+Mot trouvé: coucoucou
+Sel: .xlm4iEFnb/f7mdrTXW.0e
+Tentatives: 2,222
+Temps: 07:40
+Dictionnaire utilisé: data\Dico_fr.txt
+
+Hash #7
+Mot trouvé: editorialiste
+Sel: Pjxp17BVR2jzNtyLlQVvcu
+Tentatives: 4,444
+Temps: 16:43
+Dictionnaire utilisé: data\Dico_fr.txt
+
+Hash #8
+Mot trouvé: NOT FOUND
+Sel: 9cx9PckWtKsLtDo6ibZdDu
+Tentatives: 5,826
+Temps: 17:19
+Dictionnaire utilisé: data\Dico_fr.txt
+
+Hash #9
+Mot trouvé: NOT FOUND
+Sel: wXIcYYgH1eq9WqTJSVc3UO
+Tentatives: 5,826
+Temps: 15:48
+Dictionnaire utilisé: data\Dico_fr.txt
+
+Hash #10
+Mot trouvé: NOT FOUND
+Sel: DTW5gstQKZZN6scVuwxf4e
+Tentatives: 5,826
+Temps: 18:42
+Dictionnaire utilisé: data\Dico_fr.txt
